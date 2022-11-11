@@ -3,8 +3,9 @@ import urllib.request
 import os
 from werkzeug.utils import secure_filename
 import keras
-import cv2
 import numpy as np
+from PIL import Image
+import tensorflow as tf
 
 app = Flask(__name__)
 model = keras.models.load_model('potato.h5')
@@ -27,11 +28,15 @@ def upload_image():
     file = request.files['file']
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    print(type(filename))
-    image = cv2.imread('./static/uploads/'+filename)
+    img = Image.open('./static/uploads/'+filename)
+    image = np.asarray(img)
+    a= tf.convert_to_tensor(image)
+    image=a.numpy().astype("uint8")
     image.resize(1, 256, 256, 3)
-    a=np.array(image)
-    prediction = model.predict(a)
+    b=np.array(image)
+    potato_class=['Early Blight','Healthy','Late Blight']
+    #prediction = potato_class[np.argmax(model.predict(a)[0])]
+    prediction = model.predict(b)
     return render_template('index.html', filename=prediction)
 if __name__ == "__main__":
     app.run(debug=True)
