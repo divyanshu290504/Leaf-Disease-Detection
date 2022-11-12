@@ -8,7 +8,8 @@ from PIL import Image
 import tensorflow as tf
 
 app = Flask(__name__)
-model = keras.models.load_model('potato.h5')
+model1 = keras.models.load_model('potato.h5')
+model2 = keras.models.load_model('maize_corn.h5')
 UPLOAD_FOLDER = 'static/uploads/'
  
 app.secret_key = "secret key"
@@ -25,6 +26,7 @@ def home():
 
 @app.route('/',methods=['POST'])
 def upload_image():
+    leaf = request.values['leaf']
     file = request.files['file']
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -35,8 +37,17 @@ def upload_image():
     image.resize(1, 256, 256, 3)
     b=np.array(image)
     potato_class=['Early Blight','Healthy','Late Blight']
-    #prediction = potato_class[np.argmax(model.predict(a)[0])]
-    prediction = model.predict(b)
+    maize_class=['Blight','Common-Rust','Gray_Leaf_Spot','Healthy']
+    if (leaf == 'potato'):
+        prediction = potato_class[np.argmax(model1.predict(b)[0])]
+        #prediction = model1.predict(b)
+    elif (leaf == 'maize'):
+        prediction = maize_class[np.argmax(model2.predict(b)[0])]
+        #prediction = model2.predict(b)
+    else:
+        prediction = maize_class[np.argmax(model2.predict(b)[0])]
+        #prediction = model2.predict(b)
+    #prediction = model1.predict(b)
     return render_template('index.html', filename=prediction)
 if __name__ == "__main__":
     app.run(debug=True)
